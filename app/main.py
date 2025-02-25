@@ -63,3 +63,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         print("Client disconnected")
         manager.disconnect(websocket)
+
+@app.get("/")
+def root():
+    return {"Hello": "World"}
