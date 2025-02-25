@@ -22,6 +22,11 @@ This is a FastAPI application connected to a PostgreSQL database, containerized 
 This project is a web application built with **FastAPI** and connected to a **PostgreSQL** database. The application and database are containerized using **Docker** and managed with **Docker Compose**. The app provides a simple API, and it interacts with the database to handle persistent data.
 
 The application is hosted on an **AWS EC2** instance and is automatically deployed using **GitHub Actions**.
+For openAPI documentation, visit
+
+```bash
+ http://18.205.107.171:8000/docs/
+```
 
 ---
 
