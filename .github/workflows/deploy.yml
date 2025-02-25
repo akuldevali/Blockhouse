@@ -30,11 +30,6 @@ jobs:
               docker stop fastapi-container || true
               docker rm fastapi-container || true
   
-              # Wait for the database to be ready
-              wget https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
-              chmod +x wait-for-it.sh
-              ./wait-for-it.sh db:5432 --timeout=30 --strict -- echo "Database is up, starting app"
-  
               # Build and start the new container
               docker build -t fastapi-app .
               docker run -d -p 8000:8000 --name fastapi-container --network host fastapi-app
