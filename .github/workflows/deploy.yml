@@ -1,41 +1,45 @@
-name: Deploy to AWS EC2
-
 on:
-  push:
-    branches:
-      - main  # Deploy only when pushing to main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: SSH into EC2 and Deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            set -e  # Stop on error
-            
-            # Navigate to app directory
-            cd ~/app || (echo "App directory not found! Cloning fresh copy..." && git clone https://github.com/${{ github.repository }} ~/app && cd ~/app)
-            
-            # Pull latest changes
-            git reset --hard
-            git pull origin main
-
-            # Stop and remove the existing container (if running)
-            docker stop fastapi-container || true
-            docker rm fastapi-container || true
-
-            # Build and start the new container
-            docker build -t fastapi-app .
-            docker run -d -p 8000:8000 --name fastapi-container fastapi-app
-
-            # Cleanup unused Docker images
-            docker system prune -af
+    push:
+      branches:
+        - main
+  
+  jobs:
+    deploy:
+      runs-on: ubuntu-latest
+  
+      steps:
+        - name: Checkout Code
+          uses: actions/checkout@v3
+  
+        - name: SSH into EC2 and Deploy
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.EC2_HOST }}
+            username: ubuntu
+            key: ${{ secrets.EC2_SSH_KEY }}
+            script: |
+              set -e  # Stop on error
+              
+              # Navigate to app directory
+              cd ~/app || (echo "App directory not found! Cloning fresh copy..." && git clone https://github.com/${{ github.repository }} ~/app && cd ~/app)
+              
+              # Pull latest changes
+              git reset --hard
+              git pull origin main
+  
+              # Stop and remove the existing container (if running)
+              docker stop fastapi-container || true
+              docker rm fastapi-container || true
+  
+              # Wait for the database to be ready
+              wget https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh
+              chmod +x wait-for-it.sh
+              ./wait-for-it.sh db:5432 --timeout=30 --strict -- echo "Database is up, starting app"
+  
+              # Build and start the new container
+              docker build -t fastapi-app .
+              docker run -d -p 8000:8000 --name fastapi-container --network host fastapi-app
+  
+              # Cleanup unused Docker images
+              docker system prune -af
+  
